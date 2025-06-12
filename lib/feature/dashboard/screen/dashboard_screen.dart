@@ -38,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Container(
+        
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,10 +55,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 4,
+              crossAxisCount: 4,  
               crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 1.7,
+               childAspectRatio: 1.7,
               children: [
                 _buildStatCard(
                   'Total Users',

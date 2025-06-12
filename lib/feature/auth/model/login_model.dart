@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class LoginModel {
   final String email;
   final String password;
@@ -19,7 +17,7 @@ class LoginModel {
   factory LoginModel.fromJson(Map<String, dynamic> json) {
     return LoginModel(
       email: json['email'] as String,
-      password: json['password'] 
+      password: json['password'] as String,
     );
   }
 } 

@@ -21,23 +21,7 @@ class HttpMethods {
     return response;
   }
 
-  putMethod(String url, String id) async {
-    print('$url/$id/');
-    http.Response response = await http.put(
-      Uri.parse('$url/$id/'),
-      // body: body,
-
-      headers: AppSharedPreferences.getToken().isNotEmpty
-          ? {
-              "Accept": "application/json",
-              "Authorization": "Bearer ${AppSharedPreferences.getToken()}",
-            }
-          : {},
-    );
-    print(AppSharedPreferences.getToken());
-    return response;
-  }
-
+   
   getMethod(String url, Map<String, dynamic>? params) async {
     if (params != null && params.isNotEmpty) {
       Uri uri = Uri.parse(url).replace(queryParameters: params);

@@ -34,11 +34,16 @@ class _CarsScreenState extends State<CarsScreen> {
     });
 
     try {
+      print('Fetching cars from: ${ApiGetUrl.getCars}');
       final response = await http.get(Uri.parse(ApiGetUrl.getCars));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decodedResponse = jsonDecode(response.body);
+        print('Decoded response: $decodedResponse');
         setState(() {
-          cars = jsonDecode(response.body);
+          cars = CarResponseEntity.fromJson(decodedResponse);
           _isLoading = false;
         });
       } else {

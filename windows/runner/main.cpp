@@ -17,6 +17,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
+  // Set default code page to UTF-8
+  SetConsoleOutputCP(CP_UTF8);
+  SetConsoleCP(CP_UTF8);
+
   flutter::DartProject project(L"data");
 
   std::vector<std::string> command_line_arguments =
@@ -26,8 +30,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
-  if (!window.Create(L"car_conect_dashboard", origin, size)) {
+  Win32Window::Size size(1920, 1080); // Increased default window size
+  if (!window.Create(L"Car Connect Dashboard", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

@@ -1,10 +1,12 @@
+import 'dart:convert';
+
+import 'package:car_conect_dashboard/core/api/api_links.dart';
+import 'package:car_conect_dashboard/core/resource/color_manager.dart';
+import 'package:car_conect_dashboard/core/utils/app_shared_preferences.dart';
+import 'package:car_conect_dashboard/feature/auth/model/login_model.dart';
 import 'package:car_conect_dashboard/router/router.dart';
 import 'package:flutter/material.dart';
-import 'package:car_conect_dashboard/core/resource/color_manager.dart';
-import 'package:car_conect_dashboard/feature/auth/model/login_model.dart';
-import 'package:car_conect_dashboard/core/api/api_links.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,50 +53,43 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        final loginModel = LoginModel(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-        final requestBody = jsonEncode(loginModel.toJson());
-        print('Request Body: $requestBody');
-        print('Request URL: ${ApiPostUrl.loginUsingEmail}');
+        final requestBody = {
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        };
 
         final response = await http.post(
           Uri.parse(ApiPostUrl.loginUsingEmail),
-          headers: {'Content-Type': 'application/json'},
           body: requestBody,
         );
 
-        print('Response Status Code: ${response.statusCode}');
-        print('Response Body: ${response.body}');
-
         if (response.statusCode == 200) {
-          // Login successful
-          if (mounted) {
-            Navigator.pushNamed(context, RouteNamedScreens.main);
-          }
-        } else {
-          // Login failed
-          if (mounted) {
+          final responseData = json.decode(response.body);
+          if (responseData['status'] == true) {
+            await AppSharedPreferences.setToken(responseData['token']);
+            await AppSharedPreferences.setUserId(
+                responseData['user']['id'].toString());
+            await AppSharedPreferences.setUserType(
+                responseData['user']['type']);
+            if (!mounted) return;
+            Navigator.pushReplacementNamed(context, '/main');
+          } else {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Login failed. Please check your credentials.'),
-                backgroundColor: Colors.red,
-              ),
+              const SnackBar(content: Text('Invalid credentials')),
             );
           }
-        }
-      } catch (e) {
-        print('Error occurred: $e');
-        if (mounted) {
+        } else {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('Login failed')),
           );
         }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       } finally {
         if (mounted) {
           setState(() {
@@ -130,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
+                        const Center(
                           child: Text(
                             "Admin Login",
                             style: TextStyle(
@@ -178,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  BorderSide(color: const Color(0xFF6C63FF)),
+                                  const BorderSide(color: Color(0xFF6C63FF)),
                             ),
                             errorStyle: const TextStyle(
                                 color: Colors.red,
@@ -269,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  BorderSide(color: const Color(0xFF6C63FF)),
+                                  const BorderSide(color: Color(0xFF6C63FF)),
                             ),
                             errorStyle: const TextStyle(
                                 color: Colors.red,

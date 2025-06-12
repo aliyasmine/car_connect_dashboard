@@ -353,7 +353,7 @@ class _FilterDialogState extends State<_FilterDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(24),
-        width: 400,
+        width: 800,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,14 +368,16 @@ class _FilterDialogState extends State<_FilterDialog> {
             ),
             const SizedBox(height: 20),
             TextField(
+              style: const TextStyle(color: Colors.black),
               controller: _filterController,
-              decoration: InputDecoration(
+              decoration: InputDecoration(labelStyle: const TextStyle(color: Colors.black),
                 hintText: 'Enter phone number to filter',
+                hintStyle: const TextStyle(color: Colors.black),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 prefixIcon: const Icon(Icons.phone),
-              ),
+              ), 
             ),
             const SizedBox(height: 24),
             Row(

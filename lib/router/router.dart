@@ -1,3 +1,4 @@
+import 'package:car_conect_dashboard/core/utils/app_shared_preferences.dart';
 import 'package:car_conect_dashboard/feature/main/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +11,7 @@ import '../feature/reservations/screens/reservations_screen.dart';
 import '../feature/statistics/screens/statistics_screen.dart';
 
 abstract class RouteNamedScreens {
-  static String init = login;
+  static String get init => AppSharedPreferences.getToken() == null ? "/login" : "/main";
   static const String splash = "/splash";
   static const String main = "/main";
   static const String profile = "/profile";
@@ -30,6 +31,7 @@ abstract class RouteNamedScreens {
 class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case '/':
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/main':
@@ -37,10 +39,9 @@ class AppRouter {
       case '/cars':
         return MaterialPageRoute(builder: (_) => const CarsScreen());
       case '/car-details':
-        final carId = settings.arguments as String;
+        final args = settings.arguments as CarDetailsArgs;
         return MaterialPageRoute(
-            builder: (_) =>
-                CarDetailsScreen(args: CarDetailsArgs(carId: carId)));
+            builder: (_) => CarDetailsScreen(args: args));
       case '/business-details':
         final businessId = settings.arguments as String;
         return MaterialPageRoute(

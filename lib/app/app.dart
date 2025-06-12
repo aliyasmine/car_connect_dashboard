@@ -29,7 +29,7 @@ class _CarConnectDashState extends State<CarConnectDash> {
       return MaterialApp(
         theme: lightTheme(),
         navigatorKey: myAppKey,
-        debugShowCheckedModeBanner: false,
+        debugShowCheckedModeBanner: true,
         onGenerateRoute: AppRouter.onGenerateRoute,
         initialRoute: RouteNamedScreens.init,
       );

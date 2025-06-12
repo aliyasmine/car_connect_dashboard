@@ -1,6 +1,5 @@
-String _baseUrl = 'http://127.0.0.1:8000/api/';
-String imageUrl = 'http://127.0.0.1:8000/storage/';
-
+String _baseUrl = 'http://192.168.43.167:3000/api/';
+String imageUrl = 'http://192.168.43.167:3000/storage/';
 class ApiGetUrl {
   static String getBrands = '${_baseUrl}getBrands';
   static String getCarsByBusinessUserId = '${_baseUrl}getCarsByBusinessUserId';

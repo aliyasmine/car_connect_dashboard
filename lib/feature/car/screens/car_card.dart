@@ -70,10 +70,8 @@ class _CarCardState extends State<CarCard> {
                             height: AppHeightManager.h27,
                             fit: BoxFit.cover,
                             imageUrl: (widget.car?.images ?? []).isEmpty
-                                ? "d"
-                                : (imageUrl) +
-                                    (widget.car?.images?.first.imageUrl ?? "")
-                            // imagePath: AppPixelManager,
+                                ? ""
+                                : "$imageUrl${widget.car?.images?.first.imageUrl ?? ""}"
                             ),
                       ),
                       Positioned(

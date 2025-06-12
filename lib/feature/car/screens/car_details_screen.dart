@@ -11,6 +11,7 @@ import '../../../core/resource/font_manager.dart';
 import '../../../core/widget/image/main_image_widget.dart';
 import '../../../core/widget/loading/app_circular_progress_widget.dart';
 import '../../../core/widget/text/app_text_widget.dart';
+import '../../../core/utils/app_shared_preferences.dart';
 
 class CarDetailsArgs {
   final String carId;
@@ -41,25 +42,47 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
     });
 
     try {
-      final response = await http.post(Uri.parse(ApiPostUrl.getCarDetails),
-          body: {'id': widget.args.carId});
+      final token = await AppSharedPreferences.getToken();
+      print('Getting car details for car ID: ${widget.args.carId}');
+      
+      final response = await http.post(
+        Uri.parse(ApiPostUrl.getCarDetails),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'id': widget.args.carId,
+        }),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
+        print('Decoded data: $data');
+        
         setState(() {
           status = 1;
           carDetails = data;
         });
-        if (data['car']['userId'] != null) {
+
+        if (data['car']?['userId'] != null) {
           getBusinessUserDetails(data['car']['userId'].toString());
         }
       } else {
+        final errorData = json.decode(response.body);
+        print('Error response data: $errorData');
         setState(() {
           status = 2;
         });
-        _showErrorSnackBar('Failed to load car details');
+        _showErrorSnackBar('Failed to load car details: ${errorData['message'] ?? 'Unknown error'}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Error getting car details: $e');
+      print('Stack trace: $stackTrace');
       setState(() {
         status = 2;
       });
@@ -90,24 +113,47 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
     });
 
     try {
+      final token = await AppSharedPreferences.getToken();
+      print('Toggling car availability for car ID: ${widget.args.carId}');
+      print('Using token: $token');
+      
       final response = await http.post(
         Uri.parse(ApiPostUrl.toggleCarAvailability),
-        body: {'carId': widget.args.carId},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'carId': widget.args.carId,
+        }),
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('Decoded response data: $data');
+        
         setState(() {
           if (carDetails != null && carDetails!['car'] != null) {
-            carDetails!['car']['available'] = data['available'];
+            carDetails!['car']['available'] = data['available'] == 1 ? 1 : 0;
+            print('Updated car availability to: ${carDetails!['car']['available']}');
           }
         });
         _showSuccessSnackBar('Car availability updated successfully');
+        // Refresh car details to ensure UI is in sync
+        getCarDetails();
       } else {
-        _showErrorSnackBar('Failed to update car availability');
+        final errorData = json.decode(response.body);
+        print('Error response data: $errorData');
+        _showErrorSnackBar('Failed to update car availability: ${errorData['message'] ?? 'Unknown error'}');
       }
-    } catch (e) {
-      _showErrorSnackBar('Error updating car availability');
+    } catch (e, stackTrace) {
+      print('Error toggling car availability: $e');
+      print('Stack trace: $stackTrace');
+      _showErrorSnackBar('Error updating car availability: $e');
     } finally {
       setState(() {
         isUpdatingAvailability = false;
@@ -226,21 +272,21 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                         children: [
                           _buildStatCard(
                             "Views",
-                            carDetails?['views']?.toString() ?? '0',
+                            carDetails?['viewCount']?.toString() ?? '0',
                             Icons.visibility,
                             Colors.blue,
                           ),
                           const SizedBox(width: 16),
                           _buildStatCard(
                             "Likes",
-                            carDetails?['likes']?.toString() ?? '0',
+                            carDetails?['likesCount']?.toString() ?? '0',
                             Icons.favorite,
                             Colors.red,
                           ),
                           const SizedBox(width: 16),
                           _buildStatCard(
                             "Rating",
-                            (carDetails?['rate'] ?? 0.0).toStringAsFixed(1),
+                            (carDetails?['avgRate'] ?? 0.0).toStringAsFixed(1),
                             Icons.star,
                             Colors.amber,
                           ),
@@ -502,7 +548,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                                       _buildDetailRow(
                                         "Color",
                                         carDetails?['color']?['name'] ?? '',
-                                        Icons.color_lens,
+                                        Icons.color_lens, 
                                       ),
                                       _buildDetailRow(
                                         "Gear",
@@ -1026,43 +1072,36 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
     );
   }
 
-  Widget _buildStatCard(
-      String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+  Widget _buildDetailRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: AppColorManager.navy,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppTextWidget(
+                  text: label,
+                  color: AppColorManager.grey,
+                  fontSize: FontSizeManager.fs12,
+                ),
+                AppTextWidget(
+                  text: value,
+                  color: AppColorManager.black,
+                  fontSize: FontSizeManager.fs14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
-            const SizedBox(height: 8),
-            AppTextWidget(
-              text: value,
-              color: AppColorManager.black,
-              fontSize: FontSizeManager.fs18,
-              fontWeight: FontWeight.w600,
-            ),
-            AppTextWidget(
-              text: label,
-              color: AppColorManager.grey,
-              fontSize: FontSizeManager.fs12,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1098,34 +1137,42 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: AppColorManager.navy,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppTextWidget(
-                text: label,
-                color: AppColorManager.grey,
-                fontSize: FontSizeManager.fs12,
-              ),
-              AppTextWidget(
-                text: value,
-                color: AppColorManager.black,
-                fontSize: FontSizeManager.fs14,
-                fontWeight: FontWeight.w500,
-              ),
-            ],
-          ),
-        ],
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            AppTextWidget(
+              text: value,
+              color: AppColorManager.black,
+              fontSize: FontSizeManager.fs18,
+              fontWeight: FontWeight.w600,
+            ),
+            AppTextWidget(
+              text: label,
+              color: AppColorManager.grey,
+              fontSize: FontSizeManager.fs12,
+            ),
+          ],
+        ),
       ),
     );
   }
